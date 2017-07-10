@@ -1,0 +1,29 @@
+Build: 
+
+javac *.java
+
+Run:
+
+java Driver
+
+Goal: Build chess AI at 1200 ELO level. x = finished
+
+  - Step 1: Correctly program in all chess rules for 2 player chess
+x	  - 1a: Figure out if a situation puts player in check
+	  - 1b: Figure out if a move is legal
+		x - 1ba: Normal moves, no self captures, no moving through pieces except knights, etc.
+		x - 1bb: pawns capture diagonally
+		  - 1bc: en pessant, castle, pawn promotions
+	  - 1c: Win conditions
+		x - 1ca: If player has no valid moves
+			x - 1caa: If in check, lose game
+			x - 1cab: If not in check, tie game
+		  - 1cb: 3 move repetition, perpetual checks, 50 move w/ no pawn move.
+    
+- Step 2: Create evaluation heuristic; this will start pretty simple. 
+	- start with standard 'pawn = 1, knight = 3, bishop = 3, rook = 5, queen = 9, king = inf'
+	- take into account immediate captures. For instance, a queen trade is not catestrophic, as long as you can capture back.
+
+- Step 3: Use min-max with pruning, to try and find good moves.
+
+- Step 4: Play against it, build real front end.

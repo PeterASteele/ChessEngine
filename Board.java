@@ -4,6 +4,17 @@ public class Board {
 	boolean DEBUG;
 	private Piece[][] boardState;
 	private boolean whiteToMove;
+  
+
+  //used for checking if a player can castle
+  private boolean whiteKingMove;
+  private boolean blackKingMove;
+  
+  private boolean whiteRook1Move;
+  private boolean whiteRook2Move;
+  
+  private boolean blackRook1Move;
+  private boolean blackRook2Move;
 
 	public Board(boolean DEBUG) {
 		this.DEBUG = DEBUG;
@@ -85,7 +96,68 @@ public class Board {
 
 		return false;
 	}
-
+  
+  private boolean canPlayerCastle(boolean kingside){
+    Piece king = whiteToMove ? Piece.WHITE_KING : Piece.BLACK_KING;
+    Piece rook = whiteToMove ? Piece.WHITE_ROOK : Piece.BLACK_ROOK;
+    int row = whiteToMove ? 0 : 7; 
+    boolean kingMove = whiteToMove ? whiteKingMove : blackKingMove;
+    boolean rook1Move = whiteToMove ? whiteRook1Move : blackRook1Move;
+    boolean rook2Move = whiteToMove ? whiteRook2Move : blackRook2Move;
+    
+    debug("" + king);
+    debug("" + rook);
+    debug("" + row);
+    debug("" + kingMove);
+    debug("" + rook1Move);
+    debug("" + rook2Move);
+    
+    if (kingMove){
+      return false;
+    }
+    debug("not failed from kingmove");
+    if (kingside && rook1Move){
+      return false;
+    }
+    debug("kingside not failed");
+    if ((!kingside) && rook2Move){
+      return false;
+    }
+    debug("queenside not failed");
+    if (boardState[row][4] != king){
+      return false;
+    }
+    debug("king in right spot");
+    
+    if (kingside) {
+      boardState[row][4] = Piece.EMPTY;
+      for(int x = 4; x <= 6; x++){
+        boardState[row][x] = king;
+        if (isPlayerToMoveInCheck()){
+          boardState[row][x] = Piece.EMPTY;
+          boardState[row][4] = king;
+          return false;
+        }
+        boardState[row][x] = Piece.EMPTY;
+      }
+      boardState[row][4] = king;
+    }
+    else{
+      boardState[row][4] = Piece.EMPTY;
+      for(int x = 4; x >= 2; x--){
+        boardState[row][x] = king;
+        if (isPlayerToMoveInCheck()){
+          boardState[row][x] = Piece.EMPTY;
+          boardState[row][4] = king;
+          return false;
+        }
+        boardState[row][x] = Piece.EMPTY;
+      }
+      boardState[row][4] = king;
+    }
+    return true;
+  }
+  
 	private boolean checkAttackingKings(Point kingLocation) {
 		Piece opposingKing = Piece.EMPTY;
 
@@ -260,21 +332,27 @@ public class Board {
 	}
 
 	public boolean move(Point start, Point end) {
-		// first, check if the piece is empty
+		
+    debug("Moved called: " + start.x + " " + start.y + " " + end.x + " " + end.y);
+    
+    // first, check if the piece is empty
 		if (boardState[start.x][start.y] == Piece.EMPTY) {
 			return false;
 		}
-
+    
+    debug("not empty");
 		// cannot move in place
 		if (start.x == end.x && start.y == end.y) {
 			return false;
 		}
+    debug("move not in place");
 
 		// next, check if the piece is the correct color
 		boolean pieceColorWhite = isPieceWhite(boardState[start.x][start.y]);
 		if (pieceColorWhite != whiteToMove) {
 			return false;
 		}
+    debug("Is the piiece the correct color");
 
 		// cannot capture own piece
 		if (boardState[end.x][end.y] != Piece.EMPTY) {
@@ -283,20 +361,84 @@ public class Board {
 				return false;
 			}
 		}
-		
+		debug("not capture own piece");
 		// next, confirm if a move is valid
 		boolean validMoveForPiece = validMoveForPiece(
 				boardState[start.x][start.y], start, end);
-		if(validMoveForPiece == false){
+		
+    if(validMoveForPiece == false){
 			return false;
 		}
+    debug("Valid move for piece");
+    // store some previous state
+    boolean whiteKingTMP = whiteKingMove;
+    boolean whiteRook1TMP = whiteRook1Move;
+    boolean whiteRook2TMP = whiteRook2Move;
+    boolean blackKingTMP = blackKingMove;
+    boolean blackRook1TMP = blackRook1Move;
+    boolean blackRook2TMP = blackRook2Move;
+    // side effects? 
+    if (boardState[start.x][start.y] == Piece.BLACK_ROOK && start.x == 7 && start.y == 0) {
+      blackRook1Move = true;
+    }
+    if (boardState[start.x][start.y] == Piece.BLACK_ROOK && start.x == 7 && start.y == 7) {
+      blackRook2Move = true;
+    }
+    if (boardState[start.x][start.y] == Piece.BLACK_KING && start.x == 7 && start.y == 4) {
+      blackKingMove = true;
+    }
+    if (boardState[start.x][start.y] == Piece.WHITE_ROOK && start.x == 0 && start.y == 0) {
+      whiteRook1Move = true;
+    }
+    if (boardState[start.x][start.y] == Piece.WHITE_ROOK && start.x == 0 && start.y == 7) {
+      whiteRook2Move = true;
+    }
+    if (boardState[start.x][start.y] == Piece.WHITE_KING && start.x == 0 && start.y == 4) {
+      whiteKingMove = true;
+    }
 		// archive board
 		Piece rollBack = boardState[end.x][end.y];
+    if (boardState[start.x][start.y] == Piece.WHITE_KING && end.y == 6){
+      boardState[0][7] = Piece.EMPTY;
+      boardState[0][5] = Piece.WHITE_ROOK;
+      whiteRook2Move = true;
+      whiteRook1Move = true;
+      whiteKingMove = true;
+    }
+    if (boardState[start.x][start.y] == Piece.WHITE_KING && end.y == 2){
+      debug("Board state change");
+      boardState[0][0] = Piece.EMPTY;
+      boardState[0][3] = Piece.WHITE_ROOK;
+      whiteRook2Move = true;
+      whiteRook1Move = true;
+      whiteKingMove = true;
+    }
+    if (boardState[start.x][start.y] == Piece.BLACK_KING && end.y == 6){
+      boardState[7][7] = Piece.EMPTY;
+      boardState[7][5] = Piece.BLACK_ROOK;
+      blackRook2Move = true;
+      blackRook1Move = true;
+      blackKingMove = true;
+    }
+    if (boardState[start.x][start.y] == Piece.BLACK_KING && end.y == 2){
+      boardState[7][0] = Piece.EMPTY;
+      boardState[7][3] = Piece.BLACK_ROOK;
+      blackRook2Move = true;
+      blackRook1Move = true;
+      blackKingMove = true;
+    }
 		boardState[end.x][end.y] = boardState[start.x][start.y];
 		boardState[start.x][start.y] = Piece.EMPTY;
 
 		// check if the new board state is moving into check
 		if (isPlayerToMoveInCheck()) {
+      // store some previous state
+      whiteKingMove = whiteKingTMP;
+      whiteRook1Move = whiteRook1TMP;
+      whiteRook2Move = whiteRook2TMP;
+      blackKingMove = blackKingTMP;
+      blackRook1Move = blackRook1TMP;
+      blackRook2Move = blackRook2TMP;
 			boardState[start.x][start.y] = boardState[end.x][end.y];
 			boardState[end.x][end.y] = rollBack;
 			return false;
@@ -308,7 +450,18 @@ public class Board {
 		switch (piece) {
 		case WHITE_KING:
 		case BLACK_KING:
-			int val = Math.max(Math.abs(end.x - start.x), Math.abs(end.y - start.y));
+      debug("KING_MOVE");
+			if (piece == Piece.BLACK_KING && blackKingMove == false && end.x == 7 && (end.y == 6 || end.y == 2)){
+        debug("black castle");
+        return canPlayerCastle(end.y == 6 ? true : false);
+      }
+			if (piece == Piece.WHITE_KING && whiteKingMove == false && end.x == 0 && (end.y == 6 || end.y == 2)){
+        debug("white castle");
+        debug(""+end.y);
+        return canPlayerCastle(end.y == 6 ? true : false);
+      }
+      debug("no castle");
+      int val = Math.max(Math.abs(end.x - start.x), Math.abs(end.y - start.y));
 			return (val == 1);
 		case WHITE_QUEEN:
 		case BLACK_QUEEN:
@@ -410,7 +563,6 @@ public class Board {
 			}
 			return true;
 		}
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -444,4 +596,10 @@ public class Board {
 		}
 		return false;
 	}
+
+  public void debug(String i){
+    if (DEBUG){
+      System.err.println(i);
+    }
+  }
 }

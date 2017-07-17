@@ -29,6 +29,7 @@ public class Game {
 		boolean moved = boardState.move(startPoint, endPoint);
 		return moved;		
 	}
+	
 	public boolean tryMove(String move) {
 		Scanner in = new Scanner(move);
 		

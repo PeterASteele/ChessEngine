@@ -10,7 +10,7 @@ public class BoardPrinter {
 		Piece[][] pieces = boardToPrint.getPieces();
 		StringBuilder output = new StringBuilder();
 		output.append("      0     1     2     3     4     5     6     7    \n   " + getHorizontalRow() + "   \n");
-		for(int a = 0; a < 8; a++){
+		for(int a = 7; a >= 0; a--){
 			output.append(a + ": | ");
 			for(int b = 0; b < 8; b++){
 				output.append(pieceToString(pieces[a][b]) + " | ");

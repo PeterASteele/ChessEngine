@@ -713,15 +713,14 @@ public class Board {
 
 	public Move getGoodMove() {
 		// First, get a list of all possible moves
-		ArrayList<int[]> moves = new ArrayList<int[]>();
+		ArrayList<Move> moves = new ArrayList<Move>();
 		for (int a = 0; a < 8; a++) {
 			for (int b = 0; b < 8; b++) {
 				for (int c = 0; c < 8; c++) {
 					for (int d = 0; d < 8; d++) {
 						boolean moveValid = tryMove(new Move(new Point(a, b), new Point(c, d)));
 						if (moveValid) {
-							int[] tmp = { a, b, c, d };
-							moves.add(tmp);
+							moves.add(new Move(new Point(a, b), new Point(c, d)));
 						}
 					}
 				}
@@ -729,9 +728,9 @@ public class Board {
 		}
 
 		double bestValuation = whiteToMove ? -10000000 : 10000000;
-		int[] bestMove = null;
-		for (int[] val : moves) {
-			double possibility = getValuationOfMove(new Move(new Point(val[0], val[1]), new Point(val[2], val[3])));
+		Move bestMove = null;
+		for (Move val : moves) {
+			double possibility = getValuationOfMove(new Move(new Point(val.start.x, val.start.y), new Point(val.end.x, val.end.y)));
 			if((possibility < bestValuation) ^ whiteToMove) {
 				bestValuation = possibility;
 				bestMove = val;
@@ -739,7 +738,7 @@ public class Board {
 		}
 
 		// TODO Auto-generated method stub
-		return new Move(new Point(bestMove[0], bestMove[1]), new Point(bestMove[2], bestMove[3]));
+		return bestMove;
 	}
 
 	private double getValuationOfMove(Move makeMove) {

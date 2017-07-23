@@ -11,8 +11,8 @@ public class GameOverCheck {
 			for (int b = 0; b < 8; b++) {
 				for (int c = 0; c < 8; c++) {
 					for (int d = 0; d < 8; d++) {
-						boolean moveValid = boardState.tryMove(new Point(a, b),
-								new Point(c, d));
+						boolean moveValid = boardState.tryMove(new Move(new Point(a, b),
+								new Point(c, d)));
 						if (moveValid) {
 							return false;
 						}

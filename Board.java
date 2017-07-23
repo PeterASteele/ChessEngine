@@ -341,8 +341,10 @@ public class Board {
 		return filterInBounds(moves);
 	}
 
-	public boolean move(Point start, Point end) {
-
+	public boolean move(Move makeMove) {
+		Point start = makeMove.start;
+		Point end = makeMove.end;
+		
 		debug("Moved called: " + start.x + " " + start.y + " " + end.x + " " + end.y);
 
 		// first, check if the piece is empty
@@ -638,9 +640,9 @@ public class Board {
 		blackRook2Move = in.blackRook2Move;
 	}
 
-	public boolean tryMove(Point start, Point end) {
+	public boolean tryMove(Move makeMove) {
 		Board rollBack = cloneBoard();
-		boolean testMove = move(start, end);
+		boolean testMove = move(makeMove);
 		if (testMove == true) {
 			setBoard(rollBack);
 			return true;
@@ -709,14 +711,14 @@ public class Board {
 		return total;
 	}
 
-	public String getGoodMove() {
+	public Move getGoodMove() {
 		// First, get a list of all possible moves
 		ArrayList<int[]> moves = new ArrayList<int[]>();
 		for (int a = 0; a < 8; a++) {
 			for (int b = 0; b < 8; b++) {
 				for (int c = 0; c < 8; c++) {
 					for (int d = 0; d < 8; d++) {
-						boolean moveValid = tryMove(new Point(a, b), new Point(c, d));
+						boolean moveValid = tryMove(new Move(new Point(a, b), new Point(c, d)));
 						if (moveValid) {
 							int[] tmp = { a, b, c, d };
 							moves.add(tmp);
@@ -729,7 +731,7 @@ public class Board {
 		double bestValuation = whiteToMove ? -10000000 : 10000000;
 		int[] bestMove = null;
 		for (int[] val : moves) {
-			double possibility = getValuationOfMove(new Point(val[0], val[1]), new Point(val[2], val[3]));
+			double possibility = getValuationOfMove(new Move(new Point(val[0], val[1]), new Point(val[2], val[3])));
 			if((possibility < bestValuation) ^ whiteToMove) {
 				bestValuation = possibility;
 				bestMove = val;
@@ -737,12 +739,12 @@ public class Board {
 		}
 
 		// TODO Auto-generated method stub
-		return bestMove[0] + " " + bestMove[1] + " " + bestMove[2] + " " + bestMove[3];
+		return new Move(new Point(bestMove[0], bestMove[1]), new Point(bestMove[2], bestMove[3]));
 	}
 
-	private double getValuationOfMove(Point start, Point end) {
+	private double getValuationOfMove(Move makeMove) {
 		Board rollBack = cloneBoard();
-		move(start, end);
+		move(makeMove);
 		double valuation = valuation();
 		setBoard(rollBack);
 		return valuation;

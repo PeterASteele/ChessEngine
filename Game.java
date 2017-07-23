@@ -15,34 +15,13 @@ public class Game {
 		BoardPrinter printer = new BoardPrinter(boardState);
 		System.out.println(printer);
 	}
-	public boolean move(String move) {
-		Scanner in = new Scanner(move);
-		
-		int startX = in.nextInt();
-		int startY = in.nextInt();
-		Point startPoint = new Point(startX, startY);
-		
-		int endX = in.nextInt();
-		int endY = in.nextInt();
-		Point endPoint = new Point(endX, endY);
-		
-		boolean moved = boardState.move(startPoint, endPoint);
+	public boolean move(Move move) {
+		boolean moved = boardState.move(move);
 		return moved;		
 	}
 	
-	public boolean tryMove(String move) {
-		Scanner in = new Scanner(move);
-		
-		int startX = in.nextInt();
-		int startY = in.nextInt();
-		Point startPoint = new Point(startX, startY);
-		
-		int endX = in.nextInt();
-		int endY = in.nextInt();
-		Point endPoint = new Point(endX, endY);
-		
-		boolean moved = boardState.tryMove(startPoint, endPoint);
-		return moved;
+	public boolean tryMove(Move move) {
+		return boardState.tryMove(move);
 	}
 
 	public boolean isOver() {

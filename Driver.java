@@ -16,14 +16,16 @@ public class Driver {
 			game.printState();
 			boolean moveMade = false;
 			while (!moveMade) {
-				String move = "";
+				Move move;
 				if(game.boardState.isWhiteToMove()) {
-					move = input.nextLine();
+					move = new Move(input);
 				}
 				else {
 					move = game.boardState.getGoodMove();
 				}
-
+				if(!game.boardState.isWhiteToMove()) {
+					gameLog.append("\t");
+				}
 				gameLog.append(move + "\n");
 				FileWriter file = new FileWriter(filename);
 				BufferedWriter write = new BufferedWriter(file);

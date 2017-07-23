@@ -344,7 +344,7 @@ public class Board {
 	public boolean move(Move makeMove) {
 		Point start = makeMove.start;
 		Point end = makeMove.end;
-		
+
 		debug("Moved called: " + start.x + " " + start.y + " " + end.x + " " + end.y);
 
 		// first, check if the piece is empty
@@ -656,59 +656,96 @@ public class Board {
 		}
 	}
 
-	public double valuation() {
-		double total = 0;
+	public double valuation(int depth) {
+		if (depth == 0) {
+			double total = 0;
 
-		// benefit of having turn
-		double tempo = whiteToMove ? .3 : -.3;
-		total += tempo;
+			// benefit of having turn
+			double tempo = whiteToMove ? .3 : -.3;
+			total += tempo;
 
-		// pieces on board
+			// pieces on board
+			for (int a = 0; a < 8; a++) {
+				for (int b = 0; b < 8; b++) {
+					switch (boardState[a][b]) {
+					case WHITE_PAWN:
+						total += 1;
+						break;
+					case BLACK_PAWN:
+						total -= 1;
+						break;
+					case WHITE_KNIGHT:
+						total += 3;
+						break;
+					case BLACK_KNIGHT:
+						total -= 3;
+						break;
+					case WHITE_BISHOP:
+						total += 3;
+						break;
+					case BLACK_BISHOP:
+						total -= 3;
+						break;
+					case WHITE_ROOK:
+						total += 5;
+						break;
+					case BLACK_ROOK:
+						total -= 5;
+						break;
+					case WHITE_QUEEN:
+						total += 9;
+						break;
+					case BLACK_QUEEN:
+						total -= 9;
+						break;
+					case WHITE_KING:
+						total += 10000;
+						break;
+					case BLACK_KING:
+						total -= 10000;
+						break;
+					case EMPTY:
+						break;
+					}
+				}
+			}
+			return total;
+		} else {
+			whiteToMove ^= true;
+			double val =  getGoodDeepMove(depth - 1);
+			whiteToMove ^= true;
+			return val;
+		}
+	}
+
+	public double getGoodDeepMove(int depth) {
+		// First, get a list of all possible moves
+		ArrayList<Move> moves = new ArrayList<Move>();
 		for (int a = 0; a < 8; a++) {
 			for (int b = 0; b < 8; b++) {
-				switch (boardState[a][b]) {
-				case WHITE_PAWN:
-					total += 1;
-					break;
-				case BLACK_PAWN:
-					total -= 1;
-					break;
-				case WHITE_KNIGHT:
-					total += 3;
-					break;
-				case BLACK_KNIGHT:
-					total -= 3;
-					break;
-				case WHITE_BISHOP:
-					total += 3;
-					break;
-				case BLACK_BISHOP:
-					total -= 3;
-					break;
-				case WHITE_ROOK:
-					total += 5;
-					break;
-				case BLACK_ROOK:
-					total -= 5;
-					break;
-				case WHITE_QUEEN:
-					total += 9;
-					break;
-				case BLACK_QUEEN:
-					total -= 9;
-					break;
-				case WHITE_KING:
-					total += 10000;
-					break;
-				case BLACK_KING:
-					total -= 10000;
-					break;
-				case EMPTY:
-					break;
+				for (int c = 0; c < 8; c++) {
+					for (int d = 0; d < 8; d++) {
+						boolean moveValid = tryMove(new Move(new Point(a, b), new Point(c, d)));
+						if (moveValid) {
+							moves.add(new Move(new Point(a, b), new Point(c, d)));
+						}
+					}
 				}
 			}
 		}
-		return total;
+
+		double bestValuation = whiteToMove ? -10000000 : 10000000;
+		Move bestMove = null;
+		for (Move val : moves) {
+			double possibility = getValuationOfMove(val, depth);
+			if ((possibility < bestValuation) ^ whiteToMove) {
+				bestValuation = possibility;
+				bestMove = val;
+			}
+		}
+
+		// TODO Auto-generated method stub
+		return bestValuation;
 	}
 
 	public Move getGoodMove() {
@@ -730,8 +767,8 @@ public class Board {
 		double bestValuation = whiteToMove ? -10000000 : 10000000;
 		Move bestMove = null;
 		for (Move val : moves) {
-			double possibility = getValuationOfMove(new Move(new Point(val.start.x, val.start.y), new Point(val.end.x, val.end.y)));
-			if((possibility < bestValuation) ^ whiteToMove) {
+			double possibility = getValuationOfMove(val, 2);
+			if ((possibility < bestValuation) ^ whiteToMove) {
 				bestValuation = possibility;
 				bestMove = val;
 			}
@@ -741,10 +778,10 @@ public class Board {
 		return bestMove;
 	}
 
-	private double getValuationOfMove(Move makeMove) {
+	private double getValuationOfMove(Move makeMove, int depth) {
 		Board rollBack = cloneBoard();
 		move(makeMove);
-		double valuation = valuation();
+		double valuation = valuation(depth);
 		setBoard(rollBack);
 		return valuation;
 	}

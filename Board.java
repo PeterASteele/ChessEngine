@@ -9,11 +9,11 @@ public class Board {
 	private boolean whiteKingMove;
 	private boolean blackKingMove;
 
-	private boolean whiteRook1Move;
-	private boolean whiteRook2Move;
+	private boolean whiteQueensideRookMove;
+	private boolean whiteKingsideRookMove;
 
-	private boolean blackRook1Move;
-	private boolean blackRook2Move;
+	private boolean blackQueensideRookMove;
+	private boolean blackKingsideRookMove;
 
 	public Board(boolean DEBUG) {
 		this.DEBUG = DEBUG;
@@ -22,7 +22,7 @@ public class Board {
 	}
 
 	public Board(Piece[][] boardState, boolean playerMove, boolean whiteKingMove, boolean blackKingMove,
-			boolean whiteRook1Move, boolean whiteRook2Move, boolean blackRook1Move, boolean blackRook2Move) {
+				 boolean whiteQueensideRookMove, boolean whiteKingsideRookMove, boolean blackQueensideRookMove, boolean blackKingsideRookMove) {
 
 		this.boardState = new Piece[8][8];
 		for (int a = 0; a < 8; a++) {
@@ -33,10 +33,10 @@ public class Board {
 		this.whiteToMove = playerMove;
 		this.whiteKingMove = whiteKingMove;
 		this.blackKingMove = blackKingMove;
-		this.whiteRook1Move = whiteRook1Move;
-		this.blackRook1Move = blackRook1Move;
-		this.whiteRook2Move = whiteRook2Move;
-		this.blackRook2Move = blackRook2Move;
+		this.whiteQueensideRookMove = whiteQueensideRookMove;
+		this.blackQueensideRookMove = blackQueensideRookMove;
+		this.whiteKingsideRookMove = whiteKingsideRookMove;
+		this.blackKingsideRookMove = blackKingsideRookMove;
 	}
 
 	public Piece[][] getPieces() {
@@ -49,33 +49,32 @@ public class Board {
 
 	public boolean isPlayerToMoveInCheck() {
 		Point kingLocation = findKing(true);
-		if (DEBUG) {
-			System.err.println("KING LOCATION: " + kingLocation);
-		}
+		debug("KING LOCATION: " + kingLocation);
+
 		boolean attacked = false;
 		attacked |= checkAttackingPawns(kingLocation);
-		if (DEBUG && attacked) {
-			System.err.println("KING ATTACKED BY PAWNS");
+		if (attacked) {
+			debug("KING ATTACKED BY PAWNS");
 		}
 		attacked |= checkAttackingKnights(kingLocation);
-		if (DEBUG && attacked) {
-			System.err.println("KING ATTACKED BY KNIGHT");
+		if (attacked) {
+			debug("KING ATTACKED BY KNIGHT");
 		}
 		attacked |= checkAttackingBishops(kingLocation);
-		if (DEBUG && attacked) {
-			System.err.println("KING ATTACKED BY BISHOP");
+		if (attacked) {
+			debug("KING ATTACKED BY BISHOP");
 		}
 		attacked |= checkAttackingRooks(kingLocation);
-		if (DEBUG && attacked) {
-			System.err.println("KING ATTACKED BY ROOK");
+		if (attacked) {
+			debug("KING ATTACKED BY ROOK");
 		}
 		attacked |= checkAttackingQueens(kingLocation);
-		if (DEBUG && attacked) {
-			System.err.println("KING ATTACKED BY QUEEN");
+		if (attacked) {
+			debug("KING ATTACKED BY QUEEN");
 		}
 		attacked |= checkAttackingKings(kingLocation);
-		if (DEBUG && attacked) {
-			System.err.println("KING ATTACKED BY KINGS");
+		if (attacked) {
+			debug("KING ATTACKED BY KINGS");
 		}
 		return attacked;
 	}
@@ -114,25 +113,25 @@ public class Board {
 		Piece rook = whiteToMove ? Piece.WHITE_ROOK : Piece.BLACK_ROOK;
 		int row = whiteToMove ? 0 : 7;
 		boolean kingMove = whiteToMove ? whiteKingMove : blackKingMove;
-		boolean rook1Move = whiteToMove ? whiteRook1Move : blackRook1Move;
-		boolean rook2Move = whiteToMove ? whiteRook2Move : blackRook2Move;
+		boolean queensideRookMove = whiteToMove ? whiteQueensideRookMove : blackQueensideRookMove;
+		boolean kingsideRookMove = whiteToMove ? whiteKingsideRookMove : blackKingsideRookMove;
 
 		debug("" + king);
 		debug("" + rook);
 		debug("" + row);
 		debug("" + kingMove);
-		debug("" + rook1Move);
-		debug("" + rook2Move);
+		debug("" + queensideRookMove);
+		debug("" + kingsideRookMove);
 
 		if (kingMove) {
 			return false;
 		}
 		debug("not failed from kingmove");
-		if (kingside && rook1Move) {
+		if (kingside && kingsideRookMove) {
 			return false;
 		}
 		debug("kingside not failed");
-		if ((!kingside) && rook2Move) {
+		if ((!kingside) && queensideRookMove) {
 			return false;
 		}
 		debug("queenside not failed");
@@ -140,6 +139,20 @@ public class Board {
 			return false;
 		}
 		debug("king in right spot");
+		if (kingside) {
+			for (int x = 5; x <= 6; x++){
+				if(boardState[row][x] != Piece.EMPTY){
+					return false;
+				}
+			}
+		} else {
+			for (int x = 3; x >= 1; x--){
+				if(boardState[row][x] != Piece.EMPTY){
+					return false;
+				}
+			}
+		}
+
 
 		if (kingside) {
 			boardState[row][4] = Piece.EMPTY;
@@ -170,7 +183,7 @@ public class Board {
 	}
 
 	private boolean checkAttackingKings(Point kingLocation) {
-		Piece opposingKing = Piece.EMPTY;
+		Piece opposingKing;
 
 		if (whiteToMove) {
 			opposingKing = Piece.BLACK_KING;
@@ -194,9 +207,8 @@ public class Board {
 		} else {
 			opposingQueen = Piece.WHITE_QUEEN;
 		}
-		if (DEBUG) {
-			System.err.println("opposing queen" + opposingQueen);
-		}
+		debug("opposing queen" + opposingQueen);
+
 		ArrayList<Point>[] directionalMoves = new ArrayList[8];
 		directionalMoves[0] = getDirectionalMoves(kingLocation, 1, -1);
 		directionalMoves[1] = getDirectionalMoves(kingLocation, -1, 1);
@@ -385,27 +397,27 @@ public class Board {
 
 		// store some previous state
 		boolean whiteKingTMP = whiteKingMove;
-		boolean whiteRook1TMP = whiteRook1Move;
-		boolean whiteRook2TMP = whiteRook2Move;
+		boolean whiteQueensideRookMoveTMP = whiteQueensideRookMove;
+		boolean whiteKingsideRookMoveTMP = whiteKingsideRookMove;
 		boolean blackKingTMP = blackKingMove;
-		boolean blackRook1TMP = blackRook1Move;
-		boolean blackRook2TMP = blackRook2Move;
+		boolean blackQueensideRookMoveTMP = blackQueensideRookMove;
+		boolean blackKingsideRookMoveTMP = blackKingsideRookMove;
 
 		// side effects?
 		if (boardState[start.x][start.y] == Piece.BLACK_ROOK && start.x == 7 && start.y == 0) {
-			blackRook1Move = true;
+			blackQueensideRookMove = true;
 		}
 		if (boardState[start.x][start.y] == Piece.BLACK_ROOK && start.x == 7 && start.y == 7) {
-			blackRook2Move = true;
+			blackKingsideRookMove = true;
 		}
 		if (boardState[start.x][start.y] == Piece.BLACK_KING && start.x == 7 && start.y == 4) {
 			blackKingMove = true;
 		}
 		if (boardState[start.x][start.y] == Piece.WHITE_ROOK && start.x == 0 && start.y == 0) {
-			whiteRook1Move = true;
+			whiteQueensideRookMove = true;
 		}
 		if (boardState[start.x][start.y] == Piece.WHITE_ROOK && start.x == 0 && start.y == 7) {
-			whiteRook2Move = true;
+			whiteKingsideRookMove = true;
 		}
 		if (boardState[start.x][start.y] == Piece.WHITE_KING && start.x == 0 && start.y == 4) {
 			whiteKingMove = true;
@@ -416,42 +428,42 @@ public class Board {
 		if (boardState[start.x][start.y] == Piece.WHITE_KING && whiteKingTMP == false && end.y == 6) {
 			boardState[0][7] = Piece.EMPTY;
 			boardState[0][5] = Piece.WHITE_ROOK;
-			whiteRook2Move = true;
-			whiteRook1Move = true;
+			whiteKingsideRookMove = true;
+			whiteQueensideRookMove = true;
 			whiteKingMove = true;
 		}
 		if (boardState[start.x][start.y] == Piece.WHITE_KING && whiteKingTMP == false && end.y == 2) {
 			boardState[0][0] = Piece.EMPTY;
 			boardState[0][3] = Piece.WHITE_ROOK;
-			whiteRook2Move = true;
-			whiteRook1Move = true;
+			whiteKingsideRookMove = true;
+			whiteQueensideRookMove = true;
 			whiteKingMove = true;
 		}
 		if (boardState[start.x][start.y] == Piece.BLACK_KING && blackKingTMP == false && end.y == 6) {
 			boardState[7][7] = Piece.EMPTY;
 			boardState[7][5] = Piece.BLACK_ROOK;
-			blackRook2Move = true;
-			blackRook1Move = true;
+			blackKingsideRookMove = true;
+			blackQueensideRookMove = true;
 			blackKingMove = true;
 		}
 		if (boardState[start.x][start.y] == Piece.BLACK_KING && blackKingTMP == false && end.y == 2) {
 			boardState[7][0] = Piece.EMPTY;
 			boardState[7][3] = Piece.BLACK_ROOK;
-			blackRook2Move = true;
-			blackRook1Move = true;
+			blackKingsideRookMove = true;
+			blackQueensideRookMove = true;
 			blackKingMove = true;
 		}
 		if (end.x == 7 && end.y == 7) {
-			blackRook1Move = true;
+			blackKingsideRookMove = true;
 		}
 		if (end.x == 7 && end.y == 0) {
-			blackRook2Move = true;
+			blackQueensideRookMove = true;
 		}
 		if (end.x == 0 && end.y == 7) {
-			whiteRook1Move = true;
+			whiteKingsideRookMove = true;
 		}
 		if (end.x == 0 && end.y == 0) {
-			whiteRook2Move = true;
+			whiteQueensideRookMove = true;
 		}
 		boardState[end.x][end.y] = boardState[start.x][start.y];
 		boardState[start.x][start.y] = Piece.EMPTY;
@@ -460,16 +472,16 @@ public class Board {
 		if (isPlayerToMoveInCheck()) {
 			// store some previous state
 			whiteKingMove = whiteKingTMP;
-			whiteRook1Move = whiteRook1TMP;
-			whiteRook2Move = whiteRook2TMP;
+			whiteQueensideRookMove = whiteQueensideRookMoveTMP;
+			whiteKingsideRookMove = whiteKingsideRookMoveTMP;
 			blackKingMove = blackKingTMP;
-			blackRook1Move = blackRook1TMP;
-			blackRook2Move = blackRook2TMP;
+			blackQueensideRookMove = blackQueensideRookMoveTMP;
+			blackKingsideRookMove = blackKingsideRookMoveTMP;
 			boardState[start.x][start.y] = boardState[end.x][end.y];
 			boardState[end.x][end.y] = rollBack;
 			return false;
 		}
-		// promot pawn
+		// promote pawn
 		for (int x = 0; x < 8; x++) {
 			if (boardState[0][x] == Piece.BLACK_PAWN) {
 				boardState[0][x] = Piece.BLACK_QUEEN;
@@ -621,8 +633,8 @@ public class Board {
 	}
 
 	public Board cloneBoard() {
-		return new Board(boardState, whiteToMove, whiteKingMove, blackKingMove, whiteRook1Move, whiteRook2Move,
-				blackRook1Move, blackRook2Move);
+		return new Board(boardState, whiteToMove, whiteKingMove, blackKingMove, whiteQueensideRookMove, whiteKingsideRookMove,
+				blackQueensideRookMove, blackKingsideRookMove);
 	}
 
 	public void setBoard(Board in) {
@@ -634,10 +646,10 @@ public class Board {
 		whiteToMove = in.whiteToMove;
 		whiteKingMove = in.whiteKingMove;
 		blackKingMove = in.blackKingMove;
-		whiteRook1Move = in.whiteRook1Move;
-		blackRook1Move = in.blackRook1Move;
-		whiteRook2Move = in.whiteRook2Move;
-		blackRook2Move = in.blackRook2Move;
+		whiteQueensideRookMove = in.whiteQueensideRookMove;
+		blackQueensideRookMove = in.blackQueensideRookMove;
+		whiteKingsideRookMove = in.whiteKingsideRookMove;
+		blackKingsideRookMove = in.blackKingsideRookMove;
 	}
 
 	public boolean tryMove(Move makeMove) {
@@ -651,7 +663,7 @@ public class Board {
 	}
 
 	public void debug(String i) {
-		if (DEBUG) {
+		if (DEBUG && i.length() < 8) {
 			System.err.println(i);
 		}
 	}
@@ -764,8 +776,9 @@ public class Board {
 			}
 		}
 
-		double bestValuation = whiteToMove ? -10000000 : 10000000;
+		double bestValuation = whiteToMove ? -1000000000 : 1000000000;
 		Move bestMove = null;
+		System.err.println(moves.size());
 		for (Move val : moves) {
 			double possibility = getValuationOfMove(val, 2);
 			if ((possibility < bestValuation) ^ whiteToMove) {
